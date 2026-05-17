@@ -8,6 +8,7 @@ export class OrderBook {
   private orders: OrderMap = new Map();
   private encryptedKeySet = new Set<string>();
   private statusChangedAt = new Map<string, number>();
+  private commitmentMap = new Map<string, string>();
   private maxOrders: number;
   private pruneTtlMs: number;
 
@@ -35,6 +36,7 @@ export class OrderBook {
     };
 
     this.orders.set(entry.id, entry);
+    this.commitmentMap.set(order.commitment, entry.id);
     return entry;
   }
 
@@ -98,19 +100,20 @@ export class OrderBook {
   expireStale(): number {
     const now = Math.floor(Date.now() / 1000);
     let count = 0;
-    const toDelete: string[] = [];
+    const toDelete: { id: string; commitment: string }[] = [];
 
     for (const [id, order] of this.orders) {
       if (order.status === "open" && order.expiry <= now) {
-        toDelete.push(id);
+        toDelete.push({ id, commitment: order.commitment });
         count++;
       }
     }
 
-    for (const id of toDelete) {
+    for (const { id, commitment } of toDelete) {
       this.orders.delete(id);
       this.encryptedKeySet.delete(id);
       this.statusChangedAt.delete(id);
+      this.commitmentMap.delete(commitment);
     }
 
     return count;
@@ -125,22 +128,23 @@ export class OrderBook {
   pruneNonOpen(): number {
     const now = Date.now();
     let count = 0;
-    const toDelete: string[] = [];
+    const toDelete: { id: string; commitment: string }[] = [];
 
     for (const [id, order] of this.orders) {
       if (order.status !== "open") {
         const changedAt = this.statusChangedAt.get(id) ?? order.receivedAt;
         if (now - changedAt >= this.pruneTtlMs) {
-          toDelete.push(id);
+          toDelete.push({ id, commitment: order.commitment });
           count++;
         }
       }
     }
 
-    for (const id of toDelete) {
+    for (const { id, commitment } of toDelete) {
       this.orders.delete(id);
       this.encryptedKeySet.delete(id);
       this.statusChangedAt.delete(id);
+      this.commitmentMap.delete(commitment);
     }
 
     return count;
@@ -158,9 +162,8 @@ export class OrderBook {
   }
 
   getByCommitment(commitment: string): RelayerOrderEntry | undefined {
-    return Array.from(this.orders.values()).find(
-      (o) => o.commitment === commitment
-    );
+    const id = this.commitmentMap.get(commitment);
+    return id ? this.orders.get(id) : undefined;
   }
 
   size(): number {

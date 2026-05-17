@@ -21,8 +21,13 @@ export interface RelayerConfig {
   matchIntervalMs: number;
   maxSignalsPerScan: number;
   maxOrdersPerScan: number;
-  rateLimitWindowMs: number;
-  rateLimitMaxMessages: number;
+  rateLimitCapacity: number;
+  rateLimitRefill: number;
+  rateLimitRefillIntervalMs: number;
+  peerOrderLimit: number;
+  tlsEnabled: boolean;
+  authEnabled: boolean;
+  logLevel: string;
 }
 
 export interface ClientMessage {
