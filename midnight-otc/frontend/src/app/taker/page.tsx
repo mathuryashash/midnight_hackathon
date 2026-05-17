@@ -169,7 +169,7 @@ export default function TakerPage() {
       revealedAmount = 0.5 + Math.random() * 2;
 
       setSelected((s) => s ? { ...s, revealedPrice, revealedAmount } : s);
-      await delay(800);
+      await delay(2000);
     } else {
       // ── Real path: ECDH key exchange via relayer ───────────────────────────
       try {
@@ -211,7 +211,7 @@ export default function TakerPage() {
         revealedAmount = plaintext.amount;
 
         setSelected((s) => s ? { ...s, revealedPrice, revealedAmount } : s);
-        await delay(800);
+        await delay(2000);
       } catch (err) {
         setSelected((s) => s ? { ...s, step: "error", error: (err as Error).message } : s);
         return;
@@ -457,7 +457,24 @@ export default function TakerPage() {
               detail="Submitting revealAndMatch to Midnight. Verifying credential proof and commitment integrity. Zswap executing..."
               progress={85}
               color="yellow"
-            />
+            >
+              {selected.revealedPrice !== undefined && (
+                <div className="bg-green-950/20 border border-green-900/40 rounded-lg p-3 text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Confirmed Price</span>
+                    <span className="text-green-400 font-mono">
+                      {selected.revealedPrice?.toLocaleString()} {selected.order.assetPair.split("/")[1]}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Confirmed Amount</span>
+                    <span className="text-green-400 font-mono">
+                      {selected.revealedAmount?.toFixed(4)} {selected.order.assetPair.split("/")[0]}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </SettlementStep>
           ) : selected.step === "done" ? (
             <div className="bg-gray-900 border border-green-900/50 rounded-xl p-6 space-y-4">
               <div className="flex items-center gap-2 text-green-400 font-semibold">

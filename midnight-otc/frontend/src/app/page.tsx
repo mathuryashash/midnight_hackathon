@@ -219,27 +219,29 @@ export default function Dashboard() {
         <h2 className="text-lg font-semibold text-white mb-4">
           Multi-Agent Architecture
         </h2>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <div className="space-y-3">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 overflow-x-auto">
+          <div className="flex items-start justify-center min-w-max gap-0">
             {[
               { label: "MAKER", desc: "Encrypts order params locally → posts hash commitment + escrowed tokens on-chain", color: "purple" },
               { label: "RELAYER", desc: "Aggregates encrypted orders off-chain → signals direction-compatible matches (no decryption)", color: "blue" },
-              { label: "IDENTITY VERIFIER", desc: "Issues W3C Verifiable Credentials for KYC → threshold 2-of-3 signature required", color: "yellow" },
+              { label: "ID VERIFIER", desc: "Issues W3C Verifiable Credentials for KYC → threshold 2-of-3 signature required", color: "yellow" },
               { label: "ZSWAP CONTRACT", desc: "Atomic settlement: verifies credential + commitment integrity → swaps assets", color: "green" },
             ].map((node, i) => (
-              <div key={node.label} className="flex items-start gap-4">
+              <div key={node.label} className="flex items-start">
                 {i > 0 && (
-                  <div className="ml-12 -mt-2 mb-1 text-gray-700 text-xs">↓</div>
+                  <div className="flex items-center pt-4 px-2 text-gray-600 text-xl font-thin">→</div>
                 )}
-                <div className={`text-xs font-bold px-2 py-1 rounded border w-28 text-center flex-shrink-0
-                  ${node.color === 'purple' ? 'border-purple-800 text-purple-400 bg-purple-950/30' :
-                    node.color === 'blue' ? 'border-blue-800 text-blue-400 bg-blue-950/30' :
-                    node.color === 'yellow' ? 'border-yellow-800 text-yellow-400 bg-yellow-950/30' :
-                    'border-green-800 text-green-400 bg-green-950/30'}`}
-                >
-                  {node.label}
+                <div className="flex flex-col items-center w-44">
+                  <div className={`text-xs font-bold px-3 py-1.5 rounded border text-center
+                    ${node.color === 'purple' ? 'border-purple-800 text-purple-400 bg-purple-950/30' :
+                      node.color === 'blue' ? 'border-blue-800 text-blue-400 bg-blue-950/30' :
+                      node.color === 'yellow' ? 'border-yellow-800 text-yellow-400 bg-yellow-950/30' :
+                      'border-green-800 text-green-400 bg-green-950/30'}`}
+                  >
+                    {node.label}
+                  </div>
+                  <p className="text-gray-400 text-xs leading-relaxed mt-2 text-center px-1">{node.desc}</p>
                 </div>
-                <p className="text-gray-400 text-sm leading-relaxed">{node.desc}</p>
               </div>
             ))}
           </div>
