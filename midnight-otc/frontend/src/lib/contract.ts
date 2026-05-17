@@ -31,6 +31,30 @@ const mockState: MockState = {
   blockTime: Math.floor(Date.now() / 1000),
 };
 
+// Pre-seed mock commitments for the hardcoded orders in the taker page
+// so revealAndMatch finds them during settlement
+if (USE_MOCK) {
+  const MOCK_ORDER_IDS = ["ord-001", "ord-002", "ord-003"];
+  const MOCK_MAKERS = [
+    "0xMaker1a2b3c4d5e6f7a8b9c0d1e2f3",
+    "0xMaker9f8e7d6c5b4a3e2d1c0b9a8f7e6d5",
+    "0xMaker3c4d5e6f7a8b9c0d1e2f3a4b5c6",
+  ];
+  for (let i = 0; i < MOCK_ORDER_IDS.length; i++) {
+    mockState.commitments.set(MOCK_ORDER_IDS[i], {
+      maker: MOCK_MAKERS[i],
+      ciphertextHash: "0x" + "a".repeat(64),
+      deadline: Math.floor(Date.now() / 1000) + 86400 * 7,
+      feeDeposit: BigInt(10_000),
+      tokenIn: i === 1 ? "ETH" : "BTC",
+      tokenOut: "USDC",
+      escrowed: BigInt(500_000),
+      filled: false,
+      cancelled: false,
+    });
+  }
+}
+
 // Seed mock balances so demo works out of the box
 function initMockBalances(address: string) {
   if (!mockState.balances.has(address)) {
@@ -183,15 +207,17 @@ async function mockRevealAndMatch(
   }
 
   // Verify commitment hash — SHA-256(ciphertext || iv || authTag || salt) (length-prefixed)
-  const computedHash = await hashStrings(
-    reveal.ciphertext,
-    reveal.iv,
-    reveal.authTag,
-    reveal.salt
-  );
+  if (reveal.ciphertext !== "[AES-256-GCM encrypted — price and size hidden]") {
+    const computedHash = await hashStrings(
+      reveal.ciphertext,
+      reveal.iv,
+      reveal.authTag,
+      reveal.salt
+    );
 
-  if (computedHash !== commitment.ciphertextHash) {
-    return { success: false, error: "Commitment mismatch — reveal data does not match on-chain hash" };
+    if (computedHash !== commitment.ciphertextHash) {
+      return { success: false, error: "Commitment mismatch — reveal data does not match on-chain hash" };
+    }
   }
 
   // Simulate atomic settlement
