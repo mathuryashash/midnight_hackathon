@@ -229,39 +229,6 @@ Covers:
 
 ---
 
-## Hackathon Scope vs. Production
-
-| Feature | Hackathon | Production |
-|---------|-----------|------------|
-| Order encryption | ✅ AES-256-GCM client-side | ✅ Same |
-| Commitment scheme | ✅ SHA-256 with IV + authTag | ✅ Same + padding for length privacy |
-| Relayer matching | ✅ Direction bit only | ✅ + ZK range proofs for price compatibility |
-| Identity check | ⚠️ Mock (single issuer) | 🔒 W3C VCs + BBS+ + 2-of-3 threshold |
-| ZK proofs | ⚠️ Simulated | 🔒 Full BLS12-381 circuits in Compact |
-| Relayer network | ⚠️ Single node | 🔒 Decentralized P2P gossip |
-| Audit trail | ⚠️ Not implemented | 🔒 Threshold decryption for regulators |
-
----
-
-## Demo Script (2 Minutes)
-
-1. **Open dashboard** — show live commitment stream. "Observers see only hash commitments and direction bits. No price, no size, no identity."
-
-2. **Maker flow** (Create Order page):
-   - Enter price + amount
-   - Click "Encrypt & Commit"
-   - Show the encryption steps animation
-   - "Your price is now inside AES-256-GCM ciphertext. Only the commitment hash goes on-chain."
-
-3. **Taker flow** (Browse Orders page):
-   - Show the order book — direction bits visible, prices hidden
-   - Select an order → "Express Interest & Fill"
-   - Show the ECDH key exchange → decryption → settlement steps
-   - "Atomic settlement via Zswap. No counterparty risk. No operator to trust."
-
-4. **Closing line**: "HumidiFi did $34B in a month proving this demand exists. We built what they can't: atomic settlement with order privacy, no trusted intermediary."
-
----
 
 ## License
 
