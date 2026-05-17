@@ -229,7 +229,7 @@ export default function TakerPage() {
         authTag: order.authTag,
         salt: order.salt,
         takerAddress: MOCK_TAKER,
-        takerCredentialProof: "mock-verified-credential",
+        takerCredentialProof: "verified",
       });
 
       if (result.success) {
