@@ -1,0 +1,111 @@
+version: "3.9"
+
+# Midnight local development stack
+# Based on the official midnight-docs template
+# Run: docker-compose up
+
+services:
+  # Midnight local node (block producer + validator)
+  midnight-node:
+    image: midnight-ntwrk/midnight-node:latest
+    container_name: midnight-node
+    ports:
+      - "9944:9944"  # WebSocket RPC
+      - "9933:9933"  # HTTP RPC
+      - "30333:30333" # P2P
+    environment:
+      - MIDNIGHT_NETWORK=local
+      - MIDNIGHT_LOG_LEVEL=info
+    volumes:
+      - midnight-node-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9933/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Midnight Indexer (serves contract state queries)
+  midnight-indexer:
+    image: midnight-ntwrk/midnight-indexer:latest
+    container_name: midnight-indexer
+    ports:
+      - "3500:3500"
+    environment:
+      - NODE_URL=ws://midnight-node:9944
+      - POSTGRES_URL=postgresql://midnight:midnight@postgres:5432/midnight_indexer
+    depends_on:
+      midnight-node:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  # Midnight Proof Server (ZK proof generation)
+  midnight-proof-server:
+    image: midnight-ntwrk/midnight-proof-server:latest
+    container_name: midnight-proof-server
+    ports:
+      - "6300:6300"
+    environment:
+      - PROOF_SERVER_LOG_LEVEL=info
+    # Proof server requires significant CPU for BLS12-381 proving
+    # Allocate at least 4 cores for acceptable performance
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: "8G"
+
+  # PostgreSQL for indexer persistence
+  postgres:
+    image: postgres:16-alpine
+    container_name: midnight-postgres
+    environment:
+      - POSTGRES_USER=midnight
+      - POSTGRES_PASSWORD=midnight
+      - POSTGRES_DB=midnight_indexer
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U midnight"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # OTC Relayer (our service)
+  otc-relayer:
+    build:
+      context: ./relayer
+      dockerfile: Dockerfile
+    container_name: otc-relayer
+    ports:
+      - "3001:3001"
+    environment:
+      - RELAYER_PORT=3001
+      - RELAYER_HOST=0.0.0.0
+      - MATCH_INTERVAL_MS=5000
+      - MAX_ORDERS=10000
+    depends_on:
+      - midnight-node
+    restart: unless-stopped
+
+  # OTC Frontend (our Next.js app)
+  otc-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_USE_MOCK=false
+        - NEXT_PUBLIC_RELAYER_URL=ws://localhost:3001
+    container_name: otc-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_USE_MOCK=false
+      - NEXT_PUBLIC_RELAYER_URL=ws://localhost:3001
+    depends_on:
+      - otc-relayer
+    restart: unless-stopped
+
+volumes:
+  midnight-node-data:
+  postgres-data:
