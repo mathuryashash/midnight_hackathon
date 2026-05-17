@@ -12,7 +12,7 @@ import type {
   OnChainCommitment,
   RevealPayload,
   SettlementResult,
-} from "../../shared/types";
+} from "../../../shared/types";
 import { buildCommitmentInput, bufToHex } from "./crypto";
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";

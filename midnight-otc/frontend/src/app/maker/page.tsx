@@ -11,7 +11,7 @@ import {
 } from "../../lib/crypto";
 import { commitOrder } from "../../lib/contract";
 import { relayerClient } from "../../lib/relayer";
-import type { PlaintextOrder, AssetPair } from "../../../shared/types";
+import type { PlaintextOrder, AssetPair } from "../../../../shared/types";
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
 
@@ -58,7 +58,7 @@ export default function MakerPage() {
   const [matchedTakerHint, setMatchedTakerHint] = useState("");
 
   // Refs hold ECDH material and order ID across async events without causing re-renders
-  const aesKeyRef = useRef<string>("");
+  const aesKeyRef = useRef<CryptoKey | null>(null);
   const makerPrivKeyRef = useRef<CryptoKey | null>(null);
   const orderIdRef = useRef<string>("");   // Assigned by relayer after submit
   const commitmentRef = useRef<string>(""); // Used to identify our order in order:new broadcasts
@@ -85,12 +85,12 @@ export default function MakerPage() {
         if (!signal.takerPublicKey) return;
 
         const makerPrivKey = makerPrivKeyRef.current;
-        const aesKeyHex = aesKeyRef.current;
-        if (!makerPrivKey || !aesKeyHex) return;
+        const aesKey = aesKeyRef.current;
+        if (!makerPrivKey || !aesKey) return;
 
         try {
           const takerPubKey = await importPeerPublicKey(signal.takerPublicKey);
-          const encryptedAesKey = await encryptKeyForTaker(aesKeyHex, makerPrivKey, takerPubKey);
+          const encryptedAesKey = await encryptKeyForTaker(aesKey, makerPrivKey, takerPubKey);
           relayerClient.updateOrderWithKey(orderIdRef.current, encryptedAesKey);
 
           setMatchedTakerHint(signal.takerConnectionId ?? signal.takerOrderId);
@@ -143,7 +143,7 @@ export default function MakerPage() {
       commitmentRef.current = encResult.commitment;
 
       // Persist AES key — shared with the taker after match (never sent to relayer)
-      aesKeyRef.current = encResult.aesKeyHex;
+      aesKeyRef.current = encResult.aesKey;
 
       setStep("committing");
 
@@ -195,7 +195,7 @@ export default function MakerPage() {
     setPrice("");
     setAmount("");
     setMatchedTakerHint("");
-    aesKeyRef.current = "";
+    aesKeyRef.current = null;
     makerPrivKeyRef.current = null;
     orderIdRef.current = "";
     commitmentRef.current = "";

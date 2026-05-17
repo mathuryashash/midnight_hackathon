@@ -9,7 +9,7 @@ import {
   decryptOrder,
 } from "../../lib/crypto";
 import { relayerClient } from "../../lib/relayer";
-import type { RelayerOrderEntry, SettlementResult } from "../../../shared/types";
+import type { RelayerOrderEntry, SettlementResult } from "../../../../shared/types";
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
 
@@ -28,6 +28,7 @@ const MOCK_ORDERS: RelayerOrderEntry[] = [
     expiry: Math.floor(Date.now() / 1000) + 86400,
     makerAddress: "0xMaker1a2b3c4d5e6f7a8b9c0d1e2f3",
     makerPublicKey: "04a3f8c2d1e4b9fa23c1d8e4f9a0b3c2",
+    signature: "",
     receivedAt: Date.now() - 120_000,
     status: "open",
   },
@@ -43,6 +44,7 @@ const MOCK_ORDERS: RelayerOrderEntry[] = [
     expiry: Math.floor(Date.now() / 1000) + 3600 * 4,
     makerAddress: "0xMaker9f8e7d6c5b4a3e2d1c0b9a8f7e6d5",
     makerPublicKey: "04b7e9d3a5c1f8e4b2d9a7c3f1e8b4d2",
+    signature: "",
     receivedAt: Date.now() - 600_000,
     status: "open",
   },
@@ -58,6 +60,7 @@ const MOCK_ORDERS: RelayerOrderEntry[] = [
     expiry: Math.floor(Date.now() / 1000) + 86400 * 7,
     makerAddress: "0xMaker3c4d5e6f7a8b9c0d1e2f3a4b5c6",
     makerPublicKey: "04c4d2f8a6e1b9d7c5a3f1e9d7b5c3a1",
+    signature: "",
     receivedAt: Date.now() - 1_800_000,
     status: "open",
   },
@@ -222,6 +225,8 @@ export default function TakerPage() {
       const result = await revealAndMatch(order.id, {
         commitment: order.commitment,
         ciphertext: order.ciphertext,
+        iv: order.iv,
+        authTag: order.authTag,
         salt: order.salt,
         takerAddress: MOCK_TAKER,
         takerCredentialProof: "mock-verified-credential",

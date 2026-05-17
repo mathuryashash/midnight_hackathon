@@ -7,8 +7,8 @@ import type {
   RelayerOrderEntry,
   MatchSignal,
   EncryptedOrder,
-} from "../../shared/types";
-import { validateWsMessage, type WsMessage } from "../../shared/types";
+} from "../../../shared/types";
+import { validateWsMessage, type WsMessage } from "../../../shared/types";
 
 export type RelayerEvent =
   | { event: "connected" }

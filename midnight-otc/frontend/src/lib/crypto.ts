@@ -1,4 +1,4 @@
-import type { PlaintextOrder, EncryptedOrder } from "../../shared/types";
+import type { PlaintextOrder, EncryptedOrder } from "../../../shared/types";
 
 export interface ECDHKeyPair {
   publicKey: CryptoKey;
@@ -78,6 +78,7 @@ export interface EncryptResult {
   authTag: string;
   salt: string;
   commitment: string;
+  aesKey: CryptoKey;
 }
 
 export async function encryptOrder(order: PlaintextOrder): Promise<EncryptResult> {
@@ -117,6 +118,7 @@ export async function encryptOrder(order: PlaintextOrder): Promise<EncryptResult
     authTag: authTagHex,
     salt: saltHex,
     commitment,
+    aesKey,
   };
 }
 
